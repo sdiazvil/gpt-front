@@ -19,14 +19,13 @@ export class ChatgptComponent implements OnInit {
   @ViewChild('chatMessages') private chatMessagesContainer!: ElementRef;
   messages: Message[] = [];
   newMessageText = '';
-  loading = false;
   activateResponse = false;
   websocket_url = environment.websocket;
   constructor() { }
-  
+
   ngOnInit() {
     this.socket$ = webSocket(this.websocket_url); // Reemplaza la URL con la dirección de tu servidor WebSocket
-  
+
     // Observador para recibir datos del servidor
     this.socket$.subscribe(
       (message: any) => {
@@ -54,9 +53,9 @@ export class ChatgptComponent implements OnInit {
   }
 
   async sendMessage() {
-    if(this.activateResponse){
-      this.messages.push({text: this.assistantResponse, incoming:true});
-      this.activateResponse=false;
+    if (this.activateResponse) {
+      this.messages.push({ text: this.assistantResponse, incoming: true });
+      this.activateResponse = false;
       this.assistantResponse = '';
     }
     if (this.newMessageText.trim() !== '') {
@@ -71,21 +70,18 @@ export class ChatgptComponent implements OnInit {
       this.newMessageText = '';
 
       try {
-        this.loading = true;
         this.sendPrompt(prompt);
       } catch (error) {
         console.error(error);
-        this.loading = false;
         throw error;
       }
 
-      this.loading = false;
       this.scrollToBottom();
     }
   }
 
-   // Función para enviar el prompt al servidor
-   sendPrompt(prompt:any) {
+  // Función para enviar el prompt al servidor
+  sendPrompt(prompt: any) {
     if (this.socket$) {
       this.socket$.next({ prompt: prompt });
     }
