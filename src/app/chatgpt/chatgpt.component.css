@@ -42,7 +42,6 @@
 .message.incoming {
   background-color: #e1e5ea;
   align-self: flex-start;
-  width: 50%;
 }
 
 .message.outgoing {
