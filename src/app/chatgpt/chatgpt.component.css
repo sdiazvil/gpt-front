@@ -23,7 +23,7 @@
   margin-bottom: 10px; /* Espacio entre mensajes */
   padding: 10px;
   border-radius: 4px;
-  max-width: 80%;
+  max-width: 60%;
   word-wrap: break-word; /* Rompe las palabras largas si no caben en el contenedor */
 }
 
@@ -38,9 +38,11 @@
   flex-direction: column-reverse; /* Cambia la dirección de flexión para mostrar los mensajes desde abajo */
 }
 
+
 .message.incoming {
   background-color: #e1e5ea;
   align-self: flex-start;
+  width: 50%;
 }
 
 .message.outgoing {
