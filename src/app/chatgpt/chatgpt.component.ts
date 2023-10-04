@@ -1,7 +1,6 @@
 import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
-import { ChatGPTService } from '../chatgpt.service';
-import { Observable } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
+import { environment } from 'src/environments/environment';
 
 export class textResponse {
   sno: number = 1;
@@ -15,40 +14,28 @@ export class textResponse {
   styleUrls: ['./chatgpt.component.css']
 })
 export class ChatgptComponent implements OnInit {
-  //messages: string[] = [];
   private socket$: WebSocketSubject<any> | undefined;
-  promptText: string = ''; // Variable para almacenar el prompt ingresado por el usuario
   assistantResponse = '';
-
-
-  //
-
   @ViewChild('chatMessages') private chatMessagesContainer!: ElementRef;
-
   messages: Message[] = [];
   newMessageText = '';
   loading = false;
-
-  constructor(private openaiService: ChatGPTService) { }
-
+  activateResponse = false;
+  websocket_url = environment.websocket;
+  constructor() { }
+  
   ngOnInit() {
-    this.socket$ = webSocket('ws://localhost:8000/completions'); // Reemplaza la URL con la dirección de tu servidor WebSocket
+    this.socket$ = webSocket(this.websocket_url); // Reemplaza la URL con la dirección de tu servidor WebSocket
   
     // Observador para recibir datos del servidor
     this.socket$.subscribe(
       (message: any) => {
         try {
           const data = message
-          //console.log(message)
+          this.activateResponse = true;
           if (data.message) {
-            // const responseMessage: Message = {
-            //   text:  data.message,
-            //   incoming: true
-            // };
-            // this.messages.push(responseMessage);
             this.assistantResponse += data.message;
             this.scrollToBottom();
-            // this.messages.push(data.message);
           }
         } catch (e) {
           console.error('Error al analizar el mensaje JSON', e);
@@ -67,6 +54,11 @@ export class ChatgptComponent implements OnInit {
   }
 
   async sendMessage() {
+    if(this.activateResponse){
+      this.messages.push({text: this.assistantResponse, incoming:true});
+      this.activateResponse=false;
+      this.assistantResponse = '';
+    }
     if (this.newMessageText.trim() !== '') {
       let newMessage: Message = {
         text: this.newMessageText,
