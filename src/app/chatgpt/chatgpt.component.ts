@@ -1,6 +1,6 @@
 import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
-import { ChatGPTService } from '../chatgpt.service';
-import { Observable } from 'rxjs';
+import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
+import { environment } from 'src/environments/environment';
 
 export class textResponse {
   sno: number = 1;
@@ -14,18 +14,51 @@ export class textResponse {
   styleUrls: ['./chatgpt.component.css']
 })
 export class ChatgptComponent implements OnInit {
+  private socket$: WebSocketSubject<any> | undefined;
+  assistantResponse = '';
   @ViewChild('chatMessages') private chatMessagesContainer!: ElementRef;
+  messages: Message[] = [];
+  newMessageText = '';
+  loading = false;
+  activateResponse = false;
+  websocket_url = environment.websocket;
+  constructor() { }
+  
+  ngOnInit() {
+    this.socket$ = webSocket(this.websocket_url); // Reemplaza la URL con la dirección de tu servidor WebSocket
+  
+    // Observador para recibir datos del servidor
+    this.socket$.subscribe(
+      (message: any) => {
+        try {
+          const data = message
+          this.activateResponse = true;
+          if (data.message) {
+            this.assistantResponse += data.message;
+            this.scrollToBottom();
+          }
+        } catch (e) {
+          console.error('Error al analizar el mensaje JSON', e);
+        }
+      },
+      (error) => {
+        console.error('Error en la conexión WebSocket', error);
+      }
+    );
+  }
 
- messages: Message[] = [];
- newMessageText = '';
-loading = false;
-
-  constructor(private openaiService: ChatGPTService) {}
-
-  ngOnInit(): void {
+  ngOnDestroy() {
+    if (this.socket$) {
+      this.socket$.complete(); // Cierra la conexión WebSocket
+    }
   }
 
   async sendMessage() {
+    if(this.activateResponse){
+      this.messages.push({text: this.assistantResponse, incoming:true});
+      this.activateResponse=false;
+      this.assistantResponse = '';
+    }
     if (this.newMessageText.trim() !== '') {
       let newMessage: Message = {
         text: this.newMessageText,
@@ -39,7 +72,7 @@ loading = false;
 
       try {
         this.loading = true;
-        this.getCompletionsStream(prompt);
+        this.sendPrompt(prompt);
       } catch (error) {
         console.error(error);
         this.loading = false;
@@ -51,21 +84,11 @@ loading = false;
     }
   }
 
-  private getCompletionsStream(prompt: string) {
-    this.openaiService.getCompletionsStream(prompt).subscribe(
-      (response: any) => {
-        console.log(response)
-        const responseMessage: Message = {
-          text: response,
-          incoming: true
-        };
-        this.messages.push(responseMessage);
-        this.scrollToBottom();
-      },
-      (error) => {
-        console.error('Error al obtener la transmisión:', error);
-      }
-    );
+   // Función para enviar el prompt al servidor
+   sendPrompt(prompt:any) {
+    if (this.socket$) {
+      this.socket$.next({ prompt: prompt });
+    }
   }
 
   private scrollToBottom() {
@@ -73,8 +96,8 @@ loading = false;
       this.chatMessagesContainer.nativeElement.scrollTop = this.chatMessagesContainer.nativeElement.scrollHeight;
     });
   }
-
 }
+
 
 interface Message {
   text: string;
