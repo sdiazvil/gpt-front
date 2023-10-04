@@ -16,9 +16,38 @@ export class ChatGPTService {
     // this.openai = new OpenAIApi(this.configuration);
   }
 
-  getCompletions(prompt: string): Observable<any> {
-    const body = { prompt:prompt };
-    return this.http.post(this.url, body);
+  // generateText(prompt: string): Promise<string | undefined> {
+  //   return this.openai.createCompletion({
+  //     model: "text-davinci-003",
+  //     prompt: prompt,
+  //     max_tokens: 56
+  //     //max_tokens: 256
+  //   }).then(response => {
+  //     return response.data.choices[0].text;
+  //   }).catch(error => {
+  //     return '';
+  //   });
+  // }
+
+  async generateTextByAPI(prompt: string): Promise<any> {
+    try {
+      const response = await this.http.post(this.url, { prompt: prompt }).toPromise();
+      // console.log(response); // Maneja la respuesta aquí
+      return response;
+    } catch (error) {
+      console.error(error); // Maneja el error si la petición falla
+    }
+  }
+
+  getCompletions(prompt: string) {
+    return this.http.post(this.url, { prompt }, { responseType: 'text' });
+  }
+
+  getCompletionsStream(prompt: string): Observable<string> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+    return this.http.post(this.url, { prompt }, { headers, responseType: 'text' });
   }
 
 }

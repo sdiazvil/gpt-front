@@ -41,7 +41,7 @@
   </div>
 </div> -->
 
-<!-- <div class="chat-container">
+<div class="chat-container">
   <div class="chat-title">ChatGPT Cencosud LabTest</div>
   <div class="chat-messages" #chatMessages>
     <ng-container *ngFor="let message of messages">
@@ -65,5 +65,4 @@
     <input type="text" [(ngModel)]="newMessageText" placeholder="Escribe un mensaje..." (keyup.enter)="sendMessage()">
     <button class="send-button" (click)="sendMessage()">Enviar</button>
   </div>
-</div> -->
-<div *ngFor="let word of words$ | async">{{ word }}</div>
+</div>
