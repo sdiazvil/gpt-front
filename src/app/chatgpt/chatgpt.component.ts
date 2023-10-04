@@ -1,7 +1,6 @@
-import { Component, ViewChild, ElementRef, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
 import { ChatGPTService } from '../chatgpt.service';
-import { BehaviorSubject, Observable, map } from 'rxjs';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 export class textResponse {
   sno: number = 1;
@@ -15,33 +14,69 @@ export class textResponse {
   styleUrls: ['./chatgpt.component.css']
 })
 export class ChatgptComponent implements OnInit {
+  @ViewChild('chatMessages') private chatMessagesContainer!: ElementRef;
 
-  words$ = new BehaviorSubject<string[]>([]);
+ messages: Message[] = [];
+ newMessageText = '';
+loading = false;
 
+  constructor(private openaiService: ChatGPTService) {}
 
-  constructor(private completionService: ChatGPTService, private cdr: ChangeDetectorRef // Importa ChangeDetectorRef
-  ) { }
+  ngOnInit(): void {
+  }
 
-  ngOnInit() {
-    const prompt = 'dime 10 ideas de negocio'; // Reemplaza con tu prompt real
+  async sendMessage() {
+    if (this.newMessageText.trim() !== '') {
+      let newMessage: Message = {
+        text: this.newMessageText,
+        incoming: false
+      };
+      this.messages.push(newMessage);
 
-    this.completionService.getCompletions(prompt).subscribe(
+      let prompt = this.newMessageText;
+
+      this.newMessageText = '';
+
+      try {
+        this.loading = true;
+        this.getCompletionsStream(prompt);
+      } catch (error) {
+        console.error(error);
+        this.loading = false;
+        throw error;
+      }
+
+      this.loading = false;
+      this.scrollToBottom();
+    }
+  }
+
+  private getCompletionsStream(prompt: string) {
+    this.openaiService.getCompletionsStream(prompt).subscribe(
       (response: any) => {
         console.log(response)
-        console.log(response.choices[0].message.content)
-        if (response.choices) {
-          const content = response.choices[0].message.content;
-          console.log(content)
-          if (content) {
-            const newWords = content.trim().split(' ');
-            this.words$.next([...this.words$.value, ...newWords]);
-          }
-        }
+        const responseMessage: Message = {
+          text: response,
+          incoming: true
+        };
+        this.messages.push(responseMessage);
+        this.scrollToBottom();
       },
       (error) => {
-        console.error('Error en la solicitud:', error);
+        console.error('Error al obtener la transmisión:', error);
       }
     );
   }
 
+  private scrollToBottom() {
+    setTimeout(() => {
+      this.chatMessagesContainer.nativeElement.scrollTop = this.chatMessagesContainer.nativeElement.scrollHeight;
+    });
+  }
+
+}
+
+interface Message {
+  text: string;
+  incoming: boolean;
 }
