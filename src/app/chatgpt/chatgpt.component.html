@@ -40,29 +40,11 @@
     <button class="send-button" (click)="sendMessage()">Enviar</button>
   </div>
 </div> -->
-
-<div class="chat-container">
-  <div class="chat-title">ChatGPT Cencosud LabTest</div>
-  <div class="chat-messages" #chatMessages>
-    <ng-container *ngFor="let message of messages">
-      <div class="message" [ngClass]="{'incoming': message.incoming, 'outgoing': !message.incoming}" [ngStyle]="{'text-align': message.incoming ? 'left' : 'right'}">
-        <p class="message-text">{{ message.text }}</p>
-      </div>
-      <br>
-    </ng-container>
-    <div *ngIf="loading" class="message incoming">
-      <div class="message-text">
-        <div class="spinner-grow" style="width: 1rem; height: 1rem; margin-right: 10px;" role="status">
-        </div>
-        <div class="spinner-grow" style="width: 1rem; height: 1rem; margin-right: 10px" role="status">
-        </div>
-        <div class="spinner-grow" style="width: 1rem; height: 1rem;" role="status">
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="chat-input">
-    <input type="text" [(ngModel)]="newMessageText" placeholder="Escribe un mensaje..." (keyup.enter)="sendMessage()">
-    <button class="send-button" (click)="sendMessage()">Enviar</button>
-  </div>
+<div>
+  <input [(ngModel)]="promptText" placeholder="Ingresa tu prompt">
+  <button (click)="sendPrompt()">Enviar Prompt</button>
 </div>
+
+
+<hr>
+<div>{{ assistantResponse }}</div>
