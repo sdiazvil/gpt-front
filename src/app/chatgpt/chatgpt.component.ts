@@ -15,25 +15,21 @@ export class textResponse {
   styleUrls: ['./chatgpt.component.css']
 })
 export class ChatgptComponent implements OnInit {
-  messages: string[] = [];
+  //messages: string[] = [];
   private socket$: WebSocketSubject<any> | undefined;
   promptText: string = ''; // Variable para almacenar el prompt ingresado por el usuario
   assistantResponse = '';
 
+
+  //
+
+  @ViewChild('chatMessages') private chatMessagesContainer!: ElementRef;
+
+  messages: Message[] = [];
+  newMessageText = '';
+  loading = false;
+
   constructor(private openaiService: ChatGPTService) { }
-
-  // ngOnInit() {
-  //   const prompt = 'Hola'; // Reemplaza con tu prompt real
-
-  //   this.openaiService.getCompletions(prompt).subscribe(
-  //     (message: string) => {
-  //       this.messages.push(message);
-  //     },
-  //     (error) => {
-  //       console.error('Error en la solicitud:', error);
-  //     }
-  //   );
-  // }
 
   ngOnInit() {
     this.socket$ = webSocket('ws://localhost:8000/completions'); // Reemplaza la URL con la dirección de tu servidor WebSocket
@@ -43,9 +39,16 @@ export class ChatgptComponent implements OnInit {
       (message: any) => {
         try {
           const data = message
-          console.log(message)
+          //console.log(message)
           if (data.message) {
-            this.assistantResponse += data.message + ' ';
+            // const responseMessage: Message = {
+            //   text:  data.message,
+            //   incoming: true
+            // };
+            // this.messages.push(responseMessage);
+            this.assistantResponse += data.message;
+            this.scrollToBottom();
+            // this.messages.push(data.message);
           }
         } catch (e) {
           console.error('Error al analizar el mensaje JSON', e);
@@ -63,10 +66,48 @@ export class ChatgptComponent implements OnInit {
     }
   }
 
-   // Función para enviar el prompt al servidor
-   sendPrompt() {
-    if (this.socket$) {
-      this.socket$.next({ prompt: this.promptText });
+  async sendMessage() {
+    if (this.newMessageText.trim() !== '') {
+      let newMessage: Message = {
+        text: this.newMessageText,
+        incoming: false
+      };
+      this.messages.push(newMessage);
+
+      let prompt = this.newMessageText;
+
+      this.newMessageText = '';
+
+      try {
+        this.loading = true;
+        this.sendPrompt(prompt);
+      } catch (error) {
+        console.error(error);
+        this.loading = false;
+        throw error;
+      }
+
+      this.loading = false;
+      this.scrollToBottom();
     }
   }
+
+   // Función para enviar el prompt al servidor
+   sendPrompt(prompt:any) {
+    if (this.socket$) {
+      this.socket$.next({ prompt: prompt });
+    }
+  }
+
+  private scrollToBottom() {
+    setTimeout(() => {
+      this.chatMessagesContainer.nativeElement.scrollTop = this.chatMessagesContainer.nativeElement.scrollHeight;
+    });
+  }
+}
+
+
+interface Message {
+  text: string;
+  incoming: boolean;
 }
